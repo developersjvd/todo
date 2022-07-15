@@ -17,7 +17,7 @@
             name="todo"
             v-model="newTodo"
             placeholder="Agregar nueva tarea"
-            class="text-xl text-green-800 placeholder-green-400 py-2 px-5 bg-green-100 rounded-l-full outline-green-300"
+            class="text-xl text-green-800 placeholder-green-400 py-2 px-5 bg-green-100 rounded-l-full focus:outline-none focus-visible:outline-none"
           />
           <button
             type="submit"
@@ -83,7 +83,20 @@
                 <td class="text-center px-1 py-2 text-green-800">
                   {{ key + 1 }}
                 </td>
-                <td class="px-1 py-2 text-green-800">{{ todo.title }}</td>
+                <td class="px-1 py-2 text-green-800">
+                  <div v-if="!todo.edit" @dblclick="editTodo(todo)">
+                    {{ todo.title }}
+                  </div>
+                  <input
+                    class="text-green-800 placeholder-green-400 py-2 px-5 bg-green-100 focus:outline-none focus-visible:outline-none"
+                    v-else
+                    type="text"
+                    v-model="todo.title"
+                    @blur="doneEdit(todo)"
+                    @keyup.enter="doneEdit(todo)"
+                    @keyup.esc="cancelEdit(todo)"
+                  />
+                </td>
                 <td
                   class="text-center px-1 py-2 text-green-800 flex gap-3 justify-start"
                 >
@@ -163,14 +176,19 @@ export default {
   data() {
     return {
       newTodo: "",
+      beforeEditCache: "",
       todos: [
         {
+          id: 0,
           title: "Tarea de ejemplo 1",
           completed: false,
+          edit: false,
         },
         {
+          id: 1,
           title: "Tarea de ejemplo 2",
           completed: false,
+          edit: false,
         },
       ],
     };
@@ -183,8 +201,23 @@ export default {
       this.todos.push({
         title: this.newTodo,
         completed: false,
+        edit: false,
       });
       this.newTodo = "";
+    },
+    editTodo(todo) {
+      this.beforeEditCache = todo.title;
+      todo.edit = true;
+    },
+    doneEdit(todo) {
+      if (todo.title.trim() == "") {
+        todo.title = this.beforeEditCache;
+      }
+      todo.edit = false;
+    },
+    cancelEdit(todo) {
+      todo.title = this.beforeEditCache;
+      todo.edit = false;
     },
     markTodoComplete(key) {
       this.todos[key].completed = true;
@@ -194,6 +227,10 @@ export default {
     },
     removeTodo(key) {
       this.todos.splice(key, 1);
+    },
+    handleEdit(key) {
+      const result = this.todos.find((todo) => todo.id === key);
+      this.newTodo = result.title;
     },
   },
   computed: {
